@@ -76,8 +76,8 @@ __Warning__:  이것은 요약이고 다음에 긴 튜토리얼이 있다.
  - [Reagent에서 흐름이 어떻게 진행되는지](#how-flow-happens-in-reagent)
  - [컴포넌트](#components)
  - [실제와 차이](#truth-interlude)
- - [템프릿 같은 컴포넌트?](#components-like-templates)
- - [React 기타등등](#react-etc)
+ - [템플릿 같은 컴포넌트?](#components-like-templates)
+ - [그 밖에 React 관련된 것](#react-etc)
  - [Subscribe](#subscribe)
  - [읽기 전용 커서일 뿐?](#just-a-read-only-cursor)
  - [The Signal Graph](#the-signal-graph)
@@ -98,7 +98,7 @@ __Warning__:  이것은 요약이고 다음에 긴 튜토리얼이 있다.
  - [다음에 볼 자료](#where-do-i-go-next)
  - [Licence](#licence)
 
-## What Problem Does It Solve?
+## 어떤 문제를 해결하려고 하는가?
 
 First, we decided to build our SPA apps with ClojureScript, then we
 choose [Reagent], then we had a problem.
@@ -127,7 +127,7 @@ Or, if we distill to pure essence, `DDATWD` - Derived Data All The Way Down.
 insider's joke, conference T-Shirt.
 
 
-## Guiding Philosophy
+## 철학에 대한 설명
 
 __First__, above all we believe in the one true [Dan Holmsand], creator of Reagent, and
 his divine instrument the `ratom`.  We genuflect towards Sweden once a day.
@@ -147,7 +147,7 @@ like read/write `cursors` which
 promote the two way flow of data. As programs get bigger, we've found that their
 use seems to encourage control logic into all the wrong places.
 
-## FRP Clarifications
+## FRP에 대한 용어 정의
 
 We'll get to the meat in a second, I promise, but first one final, useful diversion ...
 
@@ -179,7 +179,7 @@ re-frame tries to be `Derived Data everywhere, flowing`. Or perhaps,
 `Derived Data All The Way Down` (an infinite loop of Derived Data).
 More explanation on all these claims soon.
 
-## Explaining re-frame
+## Re-frame 설명
 
 To explain re-frame, I'll incrementally develop a diagram, describing each part as it is added.
 
@@ -189,12 +189,12 @@ reagent tutorial and you will need to have done one of those before continuing h
 [this one](https://github.com/jonase/reagent-tutorial) or
 [Building Single Page Apps with Reagent](http://yogthos.net/posts/2014-07-15-Building-Single-Page-Apps-with-Reagent.html).
 
-### On Data
+### 데이터
 
 <blockquote class="twitter-tweet" lang="en"><p>Well-formed Data at rest is as close to perfection in programming as it gets. All the crap that had to happen to put it there however...</p>&mdash; Fogus (@fogus) <a href="https://twitter.com/fogus/status/454582953067438080">April 11, 2014</a></blockquote>
 <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
 
-### The Big Ratom
+### 커다란 Ratom
 
 Our re-frame diagram starts (very modestly) with  Fogus' ***well-formed data at rest*** bit:
 
@@ -237,7 +237,7 @@ data in our apps. If you were to use it, you'd have to tweak the reference imple
 [perhaps using this inspiration](https://gist.github.com/allgress/11348685)).  The reference implementation already creates and manages an internal `app-db` for you, you don't need to declare one yourself.
 
 
-### The Benefits Of Data-In-The-One-Place
+### 한 곳에 데이터가 있는 것에 대한 이점
 
 I'm going to quote verbatim from Elm's website:
 
@@ -263,7 +263,7 @@ and the ability to do time travel debugging, even in a production setting. More 
 
 [Hoplon] takes the same approach via what they called `stem cells`, which is a root source of data.
 
-## Flow
+## 흐름
 
 Arguments from authority ...
 
@@ -285,7 +285,7 @@ your neck, read it again until it does, because it is important.
 Steve Grand
 
 
-### How Flow Happens In Reagent
+### Reagent에서 흐름이 어떻게 진행되는지
 
 To implement FRP, Reagent provides a `ratom` and a `reaction`.
 re-frame uses both of these
@@ -362,7 +362,7 @@ accessible via the `ratom` it returns.
 
 Okay, that was all important background information for what is to follow. Back to the diagram ...
 
-## Components
+## 컴포넌트
 
 Extending the diagram, we introduce `components`:
 
@@ -456,7 +456,7 @@ changes, which in turn means that the value in `hiccup-ratom` changes. Both `n` 
 Derived Data, flowing.
 
 
-### Truth Interlude
+### 실제와 차이
 
 I haven't been entirely straight with you:
 
@@ -473,7 +473,7 @@ ratom-nature, so we'll happily continue believing it is a `ratom` and no harm wi
 
 On with the rest of my lies and distortions...
 
-### Components Like Templates?
+### 템플릿 같은 컴포넌트?
 
 A `component` such as `greet` is like the templates you'd find in
 Django, Rails, Handlebars or Mustache -- it maps data to HTML -- except for two massive differences:
@@ -485,7 +485,7 @@ Django, Rails, Handlebars or Mustache -- it maps data to HTML -- except for two 
      the renderer of any `component` is wrapped by a `reaction`.  If any of the the "inputs"
      to that render change, the render is rerun.
 
-### React etc.
+### 그 밖에 React 관련된 것
 
 Okay, so we have some unidirectional, dynamic, async, discrete FRP-ish data flow happening here.
 
@@ -649,7 +649,7 @@ in `name-ratom` (the result of the query) stayed the same. If you were to use a 
 subscription in the outer functions, then there'll be no re-render unless the value queried (i.e. `name-ratom`) changed.
 
 
-### Just A Read-Only Cursor?
+### 읽기 전용 커서일 뿐?
 
 Subscriptions are different to read-only cursors.
 
@@ -722,7 +722,7 @@ as we saw, `items` is itself a reaction over two other signals (one of them the 
 
 So this is a Signal Graph. Data is flowing through computation into renderer, which produce Hiccup, etc.
 
-## A More Efficient Signal Graph
+## 더 효과적인 Signal Graph
 
 But there is a small problem. The approach above might get inefficient, if `:items` gets long.
 
@@ -774,7 +774,7 @@ Summary:
    even for large, deep nested data structures.
 
 
-## The 2nd Flow
+## 두번째 흐름
 
 At the top, I said that re-frame had two data flows.
 
@@ -789,7 +789,7 @@ There is a cycle, but it is handled by two independent flows.
 
 *With re-frame, it is not water that is flowing, it is data.*
 
-## Event Flow
+## 이벤트 흐름
 
 Events are what flow in the opposite direction.
 
@@ -836,7 +836,7 @@ could almost imagine them as a "stored procedures" on a
 database. Almost. Stretching it?  We do like our in-memory
 database analogies.
 
-### What are events?
+### 이벤트란 무엇인가?
 
 Events are data. You choose the format.
 
@@ -858,7 +858,7 @@ Here are some other example events:
 **Rule**:  events are pure data. No dirty tricks like putting callback functions on the wire.
 You know who you are.
 
-### Dispatching Events
+### 이벤트 디스패치
 
 Events tend to start in the DOM in response to user actions.  They are `dispatched`.
 
@@ -897,7 +897,7 @@ app-db  -->  components  -->  Hiccup  -->  Reagent  -->  VDOM  -->  React  -->  
 **Rule**:  `components` are as passive and minimal as possible when it comes to handling events.
 They `dispatch` pure data and nothing more.
 
-### Event Handlers
+### 이벤트 핸들러
 
 Collectively, event handlers provide the control logic in a re-frame application.
 
@@ -926,7 +926,7 @@ handlers pure. As a result, they tend to be easy to test and understand.  Many a
 There's more to event handlers than can be covered here in this introductory tutorial. Read up on
 issues like Middleware [in the Wiki](https://github.com/Day8/re-frame/wiki#handler-middleware).
 
-### Routing
+### 라우팅
 
 When `dispatch` is passed an event vector, it just puts that event onto a conveyor belt.
 
@@ -961,7 +961,7 @@ Here's how we would register our event handler:
 
 Any arriving event vector which has `:delete-item` as the first element will now be routed to our handler.
 
-### Control Via FSM
+### FSM을 통한 제어
 
 Above, I commented that event handlers collectively represent the "control layer" of the
 application.  They contain
@@ -996,7 +996,7 @@ the data is distributed (and synchronized) across many objects. So implementing 
 both possible and natural in re-frame, whereas it is often difficult and contrived to do so in other
 kinds of architecture (in my experience).
 
-### As A Reduce
+### Reduce 처럼
 
 So here's another way of thinking about what's happening with this data flow - another useful mental model.
 
@@ -1053,7 +1053,7 @@ repo issue with a suggestion.
 
 Back to the more pragmatic world ...
 
-### Logging And Debugging
+### 로깅과 디버깅
 
 How did that exception happen, you wonder, shaking your head?  What did the user do immediately prior
 to the exception?  What state was the app in that this event was so disastrous?
@@ -1079,7 +1079,7 @@ step by step towards the exception causing problem.
 This is utterly, utterly perfect for debugging assuming, of course, you are in a position to capture
 a checkpoint, and the events since then.
 
-### Talking To A Server
+### 서버와 통신하기
 
 Some events handlers will need to initiate an async server connection (e.g. GET or POST something).
 
@@ -1099,7 +1099,7 @@ modify `app-db` themselves.  That is always done in a handler.
 
 The [wiki](https://github.com/Day8/re-frame/wiki/Talking-To-Servers) has more on the subject.
 
-## The CPU Hog Problem
+## CPU Hog 문제
 
 Sometimes a handler has a lot of CPU intensive work to do, and getting through it will take a while.
 
@@ -1120,7 +1120,7 @@ computation.
 Luckily, [re-frame has a solution](https://github.com/Day8/re-frame/wiki/Solve-the-CPU-hog-problem).
 
 
-### In Summary
+### 요약
 
 re-frame has two distinct flows, and I claim they are BOTH FRP in nature.  The first is clearly FRP.
 The second one is conceptually FRP, but you do have to squint.
@@ -1136,7 +1136,7 @@ To build an app using re-frame, you'll have to:
  - write and register event handler functions  (control layer and/or state transition layer).
 
 
-### Where Do I Go Next?
+### 다음에 볼 자료
 
 Your next steps with re-frame should be:
   - look at the examples:  https://github.com/Day8/re-frame/tree/master/examples
