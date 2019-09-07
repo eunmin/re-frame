@@ -65,7 +65,7 @@ __Warning__:  이것은 요약이고 다음에 긴 튜토리얼이 있다.
 ## 튜토리얼 목착
 
 
- - [어떤 문제를 해결하려고 하는가?](#what-problem-does-it-solve)
+ - [어떤 문제를 해결하려고 하는가?](#어떤-문제를-해결하려고-하는가)
  - [철학에 대한 설명](#guiding-philosophy)
  - [FRP에 대한 용어 정의](#frp-clarifications)
  - [re-frame 설명](#explaining-re-frame)
