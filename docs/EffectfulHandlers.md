@@ -1,7 +1,6 @@
 ## Effectful Handlers
 
-This tutorial shows you how to implement pure event handlers that side-effect.
-Yes, a surprising claim.
+이 튜토리얼은 부수효과가 있는 순수한 이벤트 핸들러를 어떻게 구현하는지 보여준다. 맞다! 이건 놀라운 주장이다.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -27,91 +26,84 @@ Yes, a surprising claim.
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-### Events Happen
+### 이벤트 발생
 
-Events "happen" when they are dispatched.
+디스패치를 할 때 이벤트가 "발생"한다.
 
-So, this makes an event happen:
+그래서 아래 코드는 이벤트를 만든다:
 ```clj
 (dispatch [:repair-ming-vase true])
 ```
 
-Events are normally triggered by an external agent: the user clicks a button, or a server-pushed
-message arrives on a websocket.
+이벤트는 일반적으로 외부 에이전트를 통해 생긴다: 사용자가 버튼을 클릭하거나 웹소켓으로 서버에서 메시지가
+내려오는 경우
 
-### Handling The Happening
+### 이벤트 사건을 다루기
 
-Once dispatched, an event must be "handled" - which means it must be processed or actioned.
+디스패치가 되면 이벤트는 반드시 다뤄져야 한다 - 반드시 진행하거나 행동해야한다는 뜻이다.
 
-Events are mutative by nature. If your application is in one state before an
-event is processed, it will be in a different state afterwards.
+이벤트는 원래 무언가를 바꾼다. 만약 애플리케이션이 이벤트가 진행되기 전에 어떤 상태에 있었다면 이벤트가
+진행되고 나서 다른 상태로 바뀔 것이다.
 
-And that state change is very desirable. Without the state change our
-application can't incorporate that button click, or the newly arrived
-websocket message. Without mutation, an app would just sit there, stuck.
+상태 변경은 매우 바람직하다. 애플리케이션 상태 변경이 없다면 버튼 클릭이나 새로운 웹소켓 메시지 도착에 아무
+반응을 할 수 없다. 변경이 없다면 애플리케이션은 꼼짝하지 않고 그냥 가만이 있는 것이다.
 
-State change is how an application "moves forward" - how it does its job.  Useful!
+상태 변경은 애플리케이션이 어떻게 진행 할 것인지 - 어떻게 동작할 것인지에 대한 것이다. 유용하게!
 
-On the other hand, control logic and state mutation tend to be the most
-complex and error prone part of an app.
+반면 컨트롤 로직과 상태 변경은 애플리케이션에서 가장 복잡하고 에러에 취약한 부분이다.
 
 ### Your Handling
 
-To help wrangle this potential complexity, re-frame's introduction
-provided you with a simple programming model.
+이 잠재적인 복잡성에 대한 논쟁을 돕기 위해 re-frame은 단순한 프로그래밍 모델을 제공한다.
 
-It said you should call `reg-event-db` to associate an event id,
-with a function to do the handling:
+이벤트를 다룰 함수와 이벤트 아이디를 연결해 `reg-event-db`를 부를 수 있다:
 ```clj
-(re-frame.core/reg-event-db        ;; <-- call this to register a handler
-    :set-flag                      ;; this is an event id
-   (fn [db [_ new-value]]          ;; this function does the handling
+(re-frame.core/reg-event-db        ;; <-- 핸들러를 등록하라고 호출
+    :set-flag                      ;; 이것이 event id
+   (fn [db [_ new-value]]          ;; 이것은 핸들러 함수
       (assoc db :flag new-value)))
 ```
 
-The function you register, handles events with a given `id`.
+주어진 `id`의 이벤트를 처리할 수 있는 함수를 등록했다.
 
-And that handler `fn` is expected to be pure. Given the
-value in `app-db` as the first argument, and the event (vector)
-as the second argument, it is expected to provide a new value for `app-db`.
+그리고 `fn`은 순수함수 일것이라고 기대한다. 첫번째 인자로 `app-db`와 두번째 인자로 이벤트(벡터)가
+주어진다. 그리고 새로운 `app-db`를 제공하기를 기대한다. (리턴 값)
 
-Data in, a computation and data out. Pure.
+데이터가 들어오고 연산하고 데이터를 내보낸다. 순수하다.
 
 ### 90% Solution
 
-This paradigm provides a lovely solution 90% of the time, but there are times
-when it isn't enough.
+이 패러다임은 90% 정도 해결책을 제공한다. 하지만 충분하지 않은 경우가 있다.
 
-Here's an example from the messy 10%. To get its job done, this handler has to side effect:
+아래는 지저분한 10% 예제다. 작업이 끝난 것을 알기 위해 이 핸들러는 부수효과를 가진다:
 ```clj
 (reg-event-db
    :my-event
    (fn [db [_ bool]]
-       (dispatch [:do-something-else 3])    ;; oops, side-effect
+       (dispatch [:do-something-else 3])    ;; 윽! 부수효과!
        (assoc db :send-spam new-val)))
 ```
 
-That `dispatch` queues up another event to be processed. It changes the world.
+핸들러 안에 있는 `dispatch`는 다른 이벤트를 진행시키기 위해 큐에 들어간다. 이것은 세상을 바꾼다.
 
-Just to be clear, this code works.  The handler returns a new version of `db`, so tick,
-and that `dispatch` will itself be "handled" asynchronously
-very shortly after this handler finishes, double tick.
+확실하게 하기 위해 이코드는 동작하나. 이 핸들러는 새로운 버전의 `db`를 리턴하고 다음에 `dispatch`는
+이 핸들러가 끝나고 나서 매우 짧은 시간에 스스로 비동기적으로 실행 될 것이다. 더블 틱이다.
 
-So, you can "get away with it".  But it ain't pure.
+그래서 결과가 잘 나온다. 하지만 순수하지 않다.
 
-And here's more carnage:
+이것은 더 지저분한 예제다:
 ```clj
 (reg-event-db
    :my-event
    (fn [db [_ a]]
-       (GET "http://json.my-endpoint.com/blah"   ;; dirty great big side-effect
+       (GET "http://json.my-endpoint.com/blah"   ;; 더럽게 큰 부수효과
             {:handler       #(dispatch [:process-response %1])
              :error-handler #(dispatch [:bad-response %1])})
        (assoc db :flag true)))
 ```
 
-Again, this approach will work. But that dirty great big side-effect doesn't come
-for free. It's like a muddy monster truck has shown up in our field of white tulips.
+다시 말하지만 이건 잘 동작한다. 하지만 더럽게 큰 부수효과가 자유롭게 하지 못한다. 이것은 마치 하얀 튤립 정원
+앞에 거대한 몬스터 트럭이 있는 것과 같다.
 
 ### Bad, Why?
 
@@ -136,19 +128,20 @@ replay, inserting extra events into it, etc., which ruins the process.
 
 ### The 2nd Kind Of Problem
 
-And there's the other kind of purity problem:
+다음은 순수성의 또 다른 문제다:
 ```clj
 (reg-event-db
    :load-localstore
    (fn [db _]
-     (let [val (js->clj (.getItem js/localStorage "defaults-key"))]  ;; <-- Problem
+     (let [val (js->clj (.getItem js/localStorage "defaults-key"))]  ;; <-- 문제
        (assoc db :defaults val))))
 ```
 
+이벤트 핸들러가 LocalStore로 부터 데이터를 얻어 오는 것을 볼 수 있다.
 You'll notice the event handler obtains data from LocalStore.
 
-Although this handler has no side effect - it doesn't need to change the world - that action of
-obtaining data from somewhere other than its arguments, means it isn't pure.
+비록 부수효과는 없지만 - 세상을 바꾸지 않는다 - 인자가 아닌 다른 곳으로 부터 데이터를 가져온다는 것은 순수하지
+않다는 뜻이다.
 
 ### Effects And Coeffects
 
@@ -157,7 +150,7 @@ When striving for pure event handlers [there are two considerations](http://toma
   - **Coeffects** - the data your event handler requires from the world in order
     to do its computation (aka [side-causes](http://blog.jenkster.com/2015/12/what-is-functional-programming.html))
 
-We'll need a solution for both.
+우리는 두 문제 모두 해결책이 필요하다
 
 ### Why Does This Happen?
 
@@ -175,7 +168,7 @@ which *do side-effects*, we'll instead get them to *cause side-effects*.
 
 ### Doing vs Causing
 
-I proudly claim that this event handler is pure:
+나는 이 이벤트 핸들러가 순수하다고 자랑스럽게 주장한다:
 ```clj
 (reg-event-db
    :my-event
@@ -183,7 +176,7 @@ I proudly claim that this event handler is pure:
       (assoc db :flag true)))
 ```
 
-Takes a `db` value, computes and returns a `db` value. No coeffects or effects. Yep, that's Pure!
+`db`값을 받고 계산 한 후에 `db`값을 리턴한다. coeffect나 effect가 없다. 이것은 순수하다!
 
 Yes, all true, but ... this purity is only possible because re-frame is doing
 the necessary side-effecting.
