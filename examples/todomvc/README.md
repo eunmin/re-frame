@@ -2,6 +2,13 @@
 
 A [re-frame](https://github.com/Day8/re-frame) implementation of [TodoMVC](http://todomvc.com/).
 
+But this is NOT your normal, lean and minimal todomvc implementation, 
+geared towards showing how easily re-frame can implement the challenge.
+ 
+Instead, this todomvc example has evolved into more of a teaching tool 
+and we've thrown in more advanced re-frame features which are not 
+really required to get the job done. So lean and minimal is no longer a goal. 
+
 
 ## Setup And Run
 
@@ -19,21 +26,20 @@ A [re-frame](https://github.com/Day8/re-frame) implementation of [TodoMVC](http:
 
 4. Clean build
    ```
-   lein do clean, figwheel
+   lein do clean, shadow watch client
    ```
 
-5. Run
-   You'll have to wait for step 4 to do its compile, but then:
+5. Wait for step 4 to do the compile, and then run the built app:
    ```
-   open http://localhost:3450
+   open http://localhost:8280
    ```
 
 
-## Compile an optimized version
+## Compile an optimised version
 
 1. Compile
    ```
-   lein do clean, with-profile prod compile
+   lein do clean, shadow release client
    ```
 
 2. Open the following in your browser
@@ -60,12 +66,9 @@ src
 ├── db.cljs           <--- data related  (data layer)
 ├── subs.cljs         <--- subscription handlers  (query layer)
 ├── views.cljs        <--- reagent  components (view layer)
-└── handlers.cljs     <--- event handlers (control/update layer)
+└── events.cljs       <--- event handlers (control/update layer)
 ```
 
-## Notes
+## Further Notes
 
-Various:
- - The [offical reagent example](https://github.com/reagent-project/reagent/tree/master/examples/todomvc).
- - There's also a sibling example (under construction) called TodoMVC-plus which is a more complete example, including testing etc.
- - Look at the [re-frame Wiki](https://github.com/Day8/re-frame/wiki).
+The [official reagent example](https://github.com/reagent-project/reagent/tree/master/examples/todomvc). 

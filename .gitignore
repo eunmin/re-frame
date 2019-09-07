@@ -1,4 +1,5 @@
-.idea
+**/.idea/**/*
+!.idea/codeStyleSettings.xml
 *.iml
 *.log
 .nrepl-port
@@ -18,3 +19,16 @@ misc/
 /examples/simple/resources/public/js/
 .floo
 .flooignore
+node_modules/
+examples/todomvc/.idea/
+docs/build/_book/
+docs/build/index.html
+docs/**/*.epub
+docs/**/*.pdf
+docs/**/*.mobi
+build/
+*~
+/package.json
+/package-lock.json
+/shadow-cljs.edn
+/.shadow-cljs/

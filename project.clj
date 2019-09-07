@@ -1,45 +1,88 @@
-(defproject re-frame "0.5.0"
+(defproject re-frame "0.10.10-SNAPSHOT"
   :description  "A Clojurescript MVC-like Framework For Writing SPAs Using Reagent."
   :url          "https://github.com/Day8/re-frame.git"
   :license      {:name "MIT"}
-  :dependencies [[org.clojure/clojure        "1.7.0"]
-                 [org.clojure/clojurescript  "1.7.145"]
-                 [reagent "0.5.1"]]
+  :dependencies [[org.clojure/clojure "1.10.1" :scope "provided"]
+                 [org.clojure/clojurescript "1.10.520" :scope "provided"
+                  :exclusions [com.google.javascript/closure-compiler-unshaded
+                               org.clojure/google-closure-library]]
+                 [thheller/shadow-cljs "2.8.52" :scope "provided"]
+                 [reagent "0.8.1"]
+                 [net.cgrand/macrovich "0.2.1"]
+                 [org.clojure/tools.logging "0.4.1"]]
 
-  :profiles     {:debug {:debug true}
-                 :dev   {:dependencies [[spellhouse/clairvoyant "0.0-48-gf5e59d3"]]
-                         :plugins      [[lein-cljsbuild "1.1.0"]
-                                        [lein-figwheel "0.3.8"]
-                                        [com.cemerick/clojurescript.test "0.3.3"]]}}
+  :plugins [[lein-shadow "0.1.5"]]
 
+  :profiles {:debug {:debug true}
+             :dev   {:dependencies [[binaryage/devtools "0.9.10"]]
+                     :plugins      [[lein-ancient "0.6.15"]
+                                    [lein-shell "0.5.0"]]}}
 
-  :clean-targets [:target-path
-                  "run/compiled/demo"]
+  :clean-targets  [:target-path "run/compiled"]
 
   :resource-paths ["run/resources"]
-  :jvm-opts       ["-Xmx1g" "-XX:+UseConcMarkSweepGC"] ;;
-  :source-paths ["src"]
-  :test-paths   ["test"]
-  :deploy-repositories [["releases" :clojars]
-                        ["snapshots" :clojars]]
+  :jvm-opts       ["-Xmx1g"]
+  :source-paths   ["src"]
+  :test-paths     ["test"]
 
+  :shell          {:commands {"open" {:windows ["cmd" "/c" "start"]
+                                      :macosx  "open"
+                                      :linux   "xdg-open"}}}
 
-  :cljsbuild    {:builds [{:id "test"      ;; currently bogus, there is no demo or tests
-                           :source-paths   ["test"]
-                           :compiler       {:output-to     "run/compiled/test.js"
-                                            :source-map    "run/compiled/test.js.map"
-                                            :output-dir    "run/compiled/test"
-                                            :optimizations :simple
-                                            :pretty-print true}}]
+  :deploy-repositories [["clojars" {:sign-releases false
+                                    :url "https://clojars.org/repo"
+                                    :username :env/CLOJARS_USERNAME
+                                    :password :env/CLOJARS_PASSWORD}]]
 
-                 :test-commands {"rhino" ["rhino" "-opt" "-1" :rhino-runner
-                                            "run/compiled/test.js"]
-                                 "slimer" ["xvfb-run" "-a" "slimerjs" :runner
-                                                   "run/compiled/test.js"]
-                                 "phantom" ["phantomjs" ; doesn't work with phantomjs < 2.0.0
-                                            :runner "run/compiled/test.js"]}}
+  :release-tasks [["vcs" "assert-committed"]
+                  ["change" "version" "leiningen.release/bump-version" "release"]
+                  ["vcs" "commit"]
+                  ["vcs" "tag" "v" "--no-sign"]
+                  ["deploy" "clojars"]
+                  ["change" "version" "leiningen.release/bump-version"]
+                  ["vcs" "commit"]
+                  ["vcs" "push"]]
 
-  :aliases      {"auto"  ["do" "clean," "cljsbuild" "clean," "cljsbuild" "auto" "demo,"]
-                 "once"  ["do" "clean," "cljsbuild" "clean," "cljsbuild" "once" "demo,"]
-                 "test-rhino"  ["do" "clean," "cljsbuild" "once," "cljsbuild" "test" "rhino"]
-                 "test-slimer" ["do" "clean," "cljsbuild" "once," "cljsbuild" "test" "slimer"] })
+  :shadow-cljs {:nrepl  {:port 8777}
+
+                :builds {:browser-test
+                         {:target           :browser-test
+                          :ns-regexp        "re-frame\\..*-test$"
+                          :test-dir         "run/compiled/browser/test"
+                          :compiler-options {:pretty-print                       true
+                                             :external-config                    {:devtools/config {:features-to-install [:formatters :hints]}}}
+                          :devtools         {:http-port 3449
+                                             :http-root "run/compiled/browser/test"
+                                             :preloads  [devtools.preload]}}
+
+                         :karma-test
+                         {:target           :karma
+                          :ns-regexp        "re-frame\\..*-test$"
+                          :output-to        "run/compiled/karma/test/test.js"
+                          :compiler-options {:pretty-print                       true
+                                             :closure-defines                    {re-frame.trace.trace-enabled? true}}}}}
+
+  :aliases {"test-once"   ["do" "clean," "shadow" "compile" "browser-test," "shell" "open" "run/compiled/browser/test/index.html"]
+            "test-auto"   ["do" "clean," "shadow" "watch" "browser-test,"]
+            "karma-once"  ["do" "clean," "shadow" "compile" "karma-test,"]
+            "karma-auto"  ["do" "clean," "shadow" "watch" "karma-test,"]
+            ;; NOTE: In order to compile docs you would need to install
+            ;; gitbook-cli(2.3.2) utility globaly using npm or yarn
+            "docs-serve" ^{:doc "Runs the development server of docs with live reloading"} ["shell" "gitbook" "serve" "./" "./build/re-frame/"]
+            "docs-build" ^{:doc "Builds the HTML version of docs"} ["shell" "gitbook" "build" "./" "./build/re-frame/"]
+            ;; NOTE: Calibre and svgexport(0.3.2) are needed to build below
+            ;; formats of docs. Install svgexpor3t using npm or yarn.
+            "docs-pdf"  ^{:doc "Builds the PDF version of docs"}
+            ["do"
+             ["shell" "mkdir" "-p" "./build/"]
+             ["shell" "gitbook" "pdf" "./" "./build/re-frame.pdf"]]
+
+            "docs-mobi" ^{:doc "Builds the MOBI version of docs"}
+            ["do"
+             ["shell" "mkdir" "-p" "./build/"]
+             ["shell" "gitbook" "mobi" "./" "./build/re-frame.mobi"]]
+
+            "docs-epub" ^{:doc "Builds the EPUB version of docs"}
+            ["do"
+             ["shell" "mkdir" "-p" "./build/"]
+             ["shell" "gitbook" "epub" "./" "./build/re-frame.epub"]]})

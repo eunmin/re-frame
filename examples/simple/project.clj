@@ -1,31 +1,26 @@
-(defproject simple-re-frame "0.5.0"
-  :dependencies [[org.clojure/clojure       "1.7.0"]
-                 [org.clojure/clojurescript "1.7.145"]
-                 [reagent "0.5.1"]
-                 [re-frame "0.5.0"]]
+(defproject simple "0.10.10-SNAPSHOT"
+  :dependencies [[org.clojure/clojure        "1.10.1"]
+                 [org.clojure/clojurescript  "1.10.520"
+                  :exclusions [com.google.javascript/closure-compiler-unshaded
+                               org.clojure/google-closure-library]]
+                 [thheller/shadow-cljs "2.8.52"]
+                 [reagent  "0.8.1"]
+                 [re-frame "0.10.9"]]
 
-  :plugins [[lein-cljsbuild "1.1.0"]
-            [lein-figwheel "0.4.1"]]
+  :plugins [[lein-shadow "0.1.5"]]
 
-  :hooks [leiningen.cljsbuild]
+  :clean-targets ^{:protect false} [:target-path
+                                    "shadow-cljs.edn"
+                                    "package.json"
+                                    "package-lock.json"
+                                    "resources/public/js"]
 
-  :profiles {:dev {:cljsbuild
-                   {:builds {:client {:source-paths ["devsrc"]
-                                      :compiler     {:main simpleexample.dev
-                                                     :asset-path "js"
-                                                     :optimizations :none
-                                                     :source-map true
-                                                     :source-map-timestamp true}}}}}
+  :shadow-cljs {:nrepl  {:port 8777}
 
-             :prod {:cljsbuild
-                    {:builds {:client {:compiler    {:optimizations :advanced
-                                                     :elide-asserts true
-                                                     :pretty-print false}}}}}}
+                :builds {:client {:target     :browser
+                                  :output-dir "resources/public/js"
+                                  :modules    {:client {:init-fn simple.core/run}}
+                                  :devtools   {:http-root "resources/public"
+                                               :http-port 8280}}}}
 
-  :figwheel {:repl false}
-
-  :clean-targets ^{:protect false} ["resources/public/js"]
-
-  :cljsbuild {:builds {:client {:source-paths ["src"]
-                                :compiler     {:output-dir "resources/public/js"
-                                               :output-to  "resources/public/js/client.js"}}}})
+  :aliases {"dev-auto" ["shadow" "watch" "client"]})
